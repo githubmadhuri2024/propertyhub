@@ -18,6 +18,9 @@ import Updateuser from "./components/admin/Updateuser/Updateuser";
 import Viewdetails from "./components/user/Viewdetails/Viewdetails";
 import PayFee from "./components/user/PayFee/PayFee";
 import Viewpaymentdetails from "./components/owner/Viewpaymentdetails/Viewpaymentdetails";
+import Owners from "./components/admin/Owner/Owners";
+import Createowner from "./components/admin/Createowner/Createowner";
+
 
 function App(){
   return(
@@ -41,6 +44,8 @@ function App(){
         <Route path="/payfee/:id" element={<PayFee/>}/>
         
         <Route path="/viewpaymentdetails/:id" element={<Viewpaymentdetails/>}/>
+        <Route path="/owners" element={<Owners/>}/>
+        <Route path="/createowner" element={<Createowner/>}/>
 
 
 

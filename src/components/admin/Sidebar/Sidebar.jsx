@@ -37,7 +37,7 @@ const Sidebar=()=>{
                 </li>
 
                    <li>
-                  <Link to='/products'>
+                  <Link to='/owners'>
                     <i className="bi bi-box"></i>
                     <span className="menu-text">Owners</span>
                   </Link>

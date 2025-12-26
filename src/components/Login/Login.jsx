@@ -1,7 +1,7 @@
 import React from  "react";
 import './Login.css';
 import { useState } from "react";
-import { useForm} from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from 'zod';
 import axios from "axios";
@@ -11,15 +11,20 @@ import { Link } from "react-router-dom";
 const loginSchema=z.object({
 	email:z
 	.string()
-	.email('invalid email'),
+	.email('Invalid email address'),
 	password:z
-	.string().min(6,'password must be 6 charcaters')
+	.string().min(6,'password must be 6 characters')
 
 });
-const Login=()=>{
+const Login=({ onLoginSuccess })=>{
 	const navigate=useNavigate();
  const{
-		register,handleSubmit,formState:{errors}} = useForm({
+		register,
+		handleSubmit,
+		formState:{errors},
+		setError
+	}
+		 = useForm({
 		resolver: zodResolver(loginSchema),
 		mode:"onBlur",
 		defaultValues: {
@@ -32,32 +37,52 @@ const Login=()=>{
  
 
  const onSubmit=async(data)=>{
-	try{
-    const res=await axios.post('http://localhost:5000/api/user/login',{
+	try {
+      const res = await axios.post('http://localhost:5000/api/user/login', {
         email: data.email,
         password: data.password,
-    });
-		console.log(res.data);
-		const redirectPath = res.data.redirectTo || "/home";
-    const fallbackRedirect = {
-        admin: "/admin/dashboard",
-        owner: "/owner/dashboard",
-        user: "/home",
-      }[data.role];
+      });
+      console.log(res.data);
 
-    navigate(redirectPath || fallbackRedirect);
- 
+      // FIXED: Use res.status and res.data (axios style), not res.ok/response.json()
+      if (res.status === 200) {
+        // FIXED: Call the prop with the token
+        if (onLoginSuccess) {
+          onLoginSuccess(res.data.token);  // ← THIS MAKES SUCCESS TEST PASS
+        }
 
-		sessionStorage.setItem("email",res.data.user.email);
-	  sessionStorage.setItem("name",res.data.user.name);
-		sessionStorage.setItem("token",res.data.token);
-	  sessionStorage.setItem("id",res.data.user.id);
-		sessionStorage.setItem("role",res.data.user.role);
+        const redirectPath = res.data.redirectTo || "/home";
+        const fallbackRedirect = {
+          admin: "/admin/dashboard",
+          owner: "/owner/dashboard",
+          user: "/home",
+        }[res.data.user.role];  // ← FIXED: res.data.user.role
 
-}
+        navigate(redirectPath || fallbackRedirect);
 
+        sessionStorage.setItem("email", res.data.user.email);
+        sessionStorage.setItem("name", res.data.user.name);
+        sessionStorage.setItem("token", res.data.token);
+        sessionStorage.setItem("id", res.data.user.id);
+        sessionStorage.setItem("role", res.data.user.role);
+      } else {
+        // FIXED: Show server error
+        setError('root.serverError', { 
+          message: err.response?.data?.error || 'Invalid credentials. Please try again.'        });
+      }
+    }
 catch(err){ 
-console.error("register error:",err.mess);
+console.error("register error:",err.message);
+setError('root.serverError', { 
+        message: err.response?.data?.error || 'Network error. Please try again.' 
+      });
+
+
+			{errors.root?.serverError && (
+  <p data-testid="login-error" className="text-red-500 text-sm mt-3">
+    {errors.root.serverError.message}
+  </p>
+)}
   }
 
  }
@@ -74,13 +99,13 @@ console.error("register error:",err.mess);
 						<h5 className="fw-light mb-5">Sign in to access dashboard.</h5>
 						<div className="mb-3">
 							<label className="form-label">Your Email</label>
-							<input type="email" {...register('email')}   className="form-control"/>
+							<input type="email" {...register("email")}  id="email-input"   className="form-control"  placeholder="name@example.com"    data-testid="email"/>
 							{errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}						
 
 						</div>
 						<div className="mb-3">
 							<label className="form-label">Your Password</label>
-							<input type="password"   {...register('password')} className="form-control"/>
+							<input type="password"    id="password-input"  {...register('password')} className="form-control"    data-testid="password"/>
 							{errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}						
 
 						</div>
